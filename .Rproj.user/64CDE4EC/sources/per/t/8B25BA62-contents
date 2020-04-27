@@ -1,0 +1,286 @@
+
+# clearing data from workspace
+
+rm(list=ls())
+
+
+
+# load tidyverse packages in the session. 
+
+library("tidyverse")
+
+
+
+# choosing a working directory
+
+# session -> Set Working directory -> Choose Directory
+
+# select "class 11" folder and click "Open"
+
+
+
+##### logistics regression on delays data ####
+
+
+# reading delays data
+
+delays = read_csv("delays.csv")
+
+
+
+# what is the class of the output variable? 
+
+# create a Flight_Status_actual variable which takes 1 if the Flight_Status is "delayed" otherwise 0
+
+delays = delays %>%
+  mutate(Flight_Status_actual = if_else(Flight_Status == "delayed", 1, 0))
+
+
+
+# input variable : Day_Week
+# a numeric value for Day_Week does not mean anything
+# convert Day_Week into a factor variable and label 1 as Mon, 2 as Tue and so on...
+# Mon will be considered as base category
+
+delays = delays %>%
+  mutate(Day_Week = factor(Day_Week, levels = c(1:7), labels = c("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")))
+
+
+
+# input variable : Dep_Time
+# how to incorporate departure time as input into the model?
+# create a new variable (Dep_Hour) which represents the hour during which the flight departured
+# for example if the flight departure is 645, 1830... the Dep_Hour should be 6, 18...
+# convert Dep_Hour variable into a factor variable with 6 as base
+# the level 6 (means 6am-7am) will be considered as base category
+
+delays = delays %>%
+  mutate(Dep_Hour = floor(Dep_Time/100))
+
+
+delays = delays %>%
+  mutate(Dep_Hour = factor(Dep_Hour, levels = c(6:21)))
+
+
+
+# convert Origin, Destination, Carrier variables into factor variables with their respective bases as IAD, LGA, US
+
+delays = delays %>%
+  mutate(Origin = factor(Origin, levels = c("IAD", "BWI","DCA")),
+         Destination = factor(Destination, levels = c("LGA", "EWR", "JFK")),
+         Carrier = factor(Carrier, levels = c("US", "CO", "DH", "DL", "MQ", "OH", "RU", "UA")))
+
+
+
+# logistic regression model building process
+
+# create a row number variable in the dataset and name it "id"
+
+delays = delays %>%
+  mutate(id = 1:nrow(delays))
+
+
+
+# partitioning the data into training and validation
+
+# set seed to 30
+
+set.seed(30)
+
+
+
+# filter 60% of the data and assign to "train"
+
+train = delays %>%
+  sample_frac(0.6)
+
+
+
+# filter remaining 40% of the data and assign to "validation"
+
+validation = delays %>%
+  slice(-train$id)
+
+
+
+# logistics regression model
+
+train.lr = glm(Flight_Status_actual~Day_Week + Dep_Hour + Origin + Destination + Carrier + Weather, 
+               train, 
+               family = "binomial")
+
+
+
+# summary of the logistics regression model
+
+summary(train.lr)
+
+
+
+# predict Flight_Status in the validation data
+# prediction is a probability rather than a category
+
+a = predict(train.lr, validation, type = "response")
+
+
+
+# create a variable prob_prediction_prediction in the validation data
+
+validation = validation %>%
+  mutate(prob_prediction = a)
+
+
+
+# consider cutoff 0.5 to convert the probability into a category prediction
+
+validation = validation %>%
+  mutate(Flight_Status_prediction = if_else(prob_prediction >=0.5, 1, 0))
+
+
+
+##### accuracy measures for validation data ####
+
+
+# load the caret package
+
+library("caret")
+
+
+
+# convert Flight_Status actual and prediction variables to factor variables
+
+validation = validation %>%
+  mutate(Flight_Status_actual = factor(Flight_Status_actual, c(0,1)),
+         Flight_Status_prediction = factor(Flight_Status_prediction, c(0,1)))
+
+
+
+# function to generate accuracy measures
+
+# confusionMatrix(prediction values, training values)
+
+confusionMatrix(validation$Flight_Status_prediction,validation$Flight_Status_actual)
+
+
+
+##### logistics regression model with new group categories ####
+
+
+# Day_Week to Day_Type (new variable)
+# create a new variable for Day_Week which forms either weekday or weekend. name the variable as Day_Type
+# set weekday as base
+
+delays = delays %>%
+  mutate(Day_Type = if_else(Day_Week %in% c("Sat", "Sun"), "weekend", "weekday")) %>%
+  mutate(Day_Type = factor(Day_Type, levels = c("weekend", "weekday")))
+
+
+
+# Dep_Hour to Time_Day (new variable)
+# create a new variable for Dep_Hour which forms either morning (6 to 12pm), afternoon (12pm-5pm) and evening (5pm-10pm). name the variable as Time_Day
+# set morning as base
+
+delays = delays %>%
+  mutate(Time_Day = if_else(Dep_Hour %in% c("6", "7","8", "9", "10", "11"), "morning",
+                            if_else(Dep_Hour %in% c("12", "13","14", "15", "16"), "afternoon", "evening")),
+         Time_Day = factor(Time_Day, levels = c("morning", "afternoon", "evening")))
+
+
+
+# Carrier to Carrier_New (new variable)
+# create a new variable for Carrier which forms either CO_DH_MQ_RU or US_DL_OH_UA
+# set US_DL_OH_UA as base
+
+delays = delays %>%
+  mutate(Carrier_New = if_else(Carrier %in% c("CO", "DH", "MQ", "RU"), "CO_DH_MQ_RU", "US_DL_OH_UA")) %>%
+  mutate(Carrier_New = factor(Carrier_New, levels = c("US_DL_OH_UA", "CO_DH_MQ_RU")))
+
+
+
+# logistic regression model building process
+
+# create a row number variable in the dataset and name it "id"
+
+delays = delays %>%
+  mutate(id = 1:nrow(delays))
+
+
+# partitioning the data into training and validation
+
+# set seed to 30
+
+set.seed(30)
+
+
+
+# filter 60% of the data and assign to "train"
+
+train = delays %>%
+  sample_frac(0.6)
+
+
+
+# filter remaining 40% of the data and assign to "validation"
+
+validation = delays %>%
+  slice(-train$id)
+
+
+
+# logistics regression model
+
+train.lr = glm(Flight_Status_actual~Day_Type + Time_Day + Origin + Destination + Carrier_New + Weather, 
+               train, 
+               family = "binomial")
+
+
+
+# summary of the logistics regression model
+
+summary(train.lr)
+
+
+
+# predict Flight_Status in the validation data
+# prediction is a probability rather than a category
+
+a = predict(train.lr, validation, type = "response")
+
+
+
+# create a variable prob_prediction_prediction in the validation data
+
+validation = validation %>%
+  mutate(prob_prediction = a)
+
+
+
+# consider cutoff 0.5 to convert the probability into a category prediction
+
+validation = validation %>%
+  mutate(Flight_Status_prediction = if_else(prob_prediction >=0.5, 1, 0))
+
+
+
+##### accuracy measures for validation data ####
+
+
+# load the caret package
+
+library("caret")
+
+
+
+# convert Flight_Status actual and prediction variables to factor variables
+
+validation = validation %>%
+  mutate(Flight_Status_actual = factor(Flight_Status_actual, c(0,1)),
+         Flight_Status_prediction = factor(Flight_Status_prediction, c(0,1)))
+
+
+
+# function to generate accuracy measures
+
+# confusionMatrix(prediction values, training values)
+
+confusionMatrix(validation$Flight_Status_prediction,validation$Flight_Status_actual)

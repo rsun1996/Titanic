@@ -1,0 +1,25 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1587899216400.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "3742273983",
+    "id" : "F2F2446F",
+    "lastKnownWriteTime" : 1586659634,
+    "last_content_update" : 1586659634,
+    "path" : "~/Udemy/Machine Learning/Machine Learning A-Z Template Folder/Part 1 - Data Preprocessing/data_prepocessing.R",
+    "project_path" : null,
+    "properties" : {
+        "cursorPosition" : "16,21",
+        "scrollLine" : "0"
+    },
+    "read_only" : false,
+    "read_only_alternatives" : [
+    ],
+    "relative_order" : 4,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}

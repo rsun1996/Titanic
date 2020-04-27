@@ -1,0 +1,26 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1587896780824.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "1754975414",
+    "id" : "6BAF1F17",
+    "lastKnownWriteTime" : 1587900278,
+    "last_content_update" : 1587900278693,
+    "path" : "~/Machine Learning Model/R/Classification/Logistic Regression/Titanic/titanic_logstic_regression.R",
+    "project_path" : "titanic_logstic_regression.R",
+    "properties" : {
+        "cursorPosition" : "16,16",
+        "scrollLine" : "0",
+        "tempName" : "Untitled1"
+    },
+    "read_only" : false,
+    "read_only_alternatives" : [
+    ],
+    "relative_order" : 1,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}
